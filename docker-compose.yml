@@ -1,0 +1,10 @@
+version: '3.4'
+
+services:
+  pipeline:
+    image: ai-pipeline
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8888:8888

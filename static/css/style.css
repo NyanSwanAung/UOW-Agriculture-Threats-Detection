@@ -1,0 +1,58 @@
+.loading {
+    margin-top: 100px;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .animiation-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: none;
+  }
+
+  .animiation-box.display{
+    display: block;
+    display: flex;
+  }
+
+  .ball {
+    width: 20px;
+    height: 20px;
+    border-radius: 11px;
+    margin: 0 10px;
+    animation: 2s bounce ease infinite;
+  }
+
+  .ball-stop{
+    width: 20px;
+    height: 20px;
+    border-radius: 11px;
+    margin: 0 10px;
+  }
+
+  .blue {
+    background-color: #4285f5;
+  }
+  .red {
+    background-color: #ea4436;
+    animation-delay: 0.25s;
+  }
+  .yellow {
+    background-color: #fbbd06;
+    animation-delay: 0.5s;
+  }
+  .green {
+    background-color: #34a952;
+    animation-delay: 0.75s;
+  }
+  @keyframes bounce {
+    50% {
+      transform: translateY(-15px);
+    }
+  }
