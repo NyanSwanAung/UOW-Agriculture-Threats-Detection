@@ -1,33 +1,33 @@
 import argparse
-
 import cv2
 import numpy as np
 import onnxruntime as ort
 import torch
-
-from ultralytics.utils import ASSETS, yaml_load
-from ultralytics.utils.checks import check_requirements, check_yaml
-
+from utils.utils import check_hardware, get_weight_path, get_pred_folder_path, get_splitter
+from utils.logger import PythonLogger 
+logger = PythonLogger().logger 
+import os
+import time
 
 class Yolov8:
 
-    def __init__(self, onnx_model, input_image, confidence_thres, iou_thres):
+    def __init__(self, image_paths, confidence_thres=0.5, iou_thres=0.5):
         """
         Initializes an instance of the Yolov8 class.
 
         Args:
-            onnx_model: Path to the ONNX model.
             input_image: Path to the input image.
             confidence_thres: Confidence threshold for filtering detections.
             iou_thres: IoU (Intersection over Union) threshold for non-maximum suppression.
         """
-        self.onnx_model = onnx_model
-        self.input_image = input_image
+        self.image_paths = image_paths
         self.confidence_thres = confidence_thres
         self.iou_thres = iou_thres
+        self.predicted_images = []
+        self.prediction_time = 0;
 
         # Load the class names from the COCO dataset
-        self.classes = yaml_load(check_yaml('coco128.yaml'))['names']
+        self.classes = {0: 'weed'}
 
         # Generate a color palette for the classes
         self.color_palette = np.random.uniform(0, 255, size=(len(self.classes), 3))
@@ -50,7 +50,7 @@ class Yolov8:
         x1, y1, w, h = box
 
         # Retrieve the color for the class ID
-        color = self.color_palette[class_id]
+        color = (255, 0, 0)
 
         # Draw the bounding box on the image
         cv2.rectangle(img, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), color, 2)
@@ -70,9 +70,9 @@ class Yolov8:
                       cv2.FILLED)
 
         # Draw the label text on the image
-        cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-    def preprocess(self):
+    def preprocess(self, image_path):
         """
         Preprocesses the input image before performing inference.
 
@@ -80,7 +80,7 @@ class Yolov8:
             image_data: Preprocessed image data ready for inference.
         """
         # Read the input image using OpenCV
-        self.img = cv2.imread(self.input_image)
+        self.img = cv2.imread(image_path)
 
         # Get the height and width of the input image
         self.img_height, self.img_width = self.img.shape[:2]
@@ -173,15 +173,28 @@ class Yolov8:
         # Return the modified input image
         return input_image
 
-    def main(self):
+    def save_output(self):
+        pred_folder_path = get_pred_folder_path()
+        os.makedirs(pred_folder_path, exist_ok=True)
+
+        for path, pred_arr in zip(self.image_paths, self.predicted_images):
+            img_name = pred_folder_path + get_splitter() + path.split(get_splitter())[-1]
+            cv2.imwrite(img_name, pred_arr)
+
+        print()
+        logger.info(f"All predicted images have been saved!")
+        logger.info(f"Total prediction time: {self.prediction_time}s")
+        
+    def predict(self):
         """
         Performs inference using an ONNX model and returns the output image with drawn detections.
-
-        Returns:
-            output_img: The output image with drawn detections.
         """
+
         # Create an inference session using the ONNX model and specify execution providers
-        session = ort.InferenceSession(self.onnx_model, providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+        weight_path = get_weight_path()
+        cuda = check_hardware()
+        providers = ['CUDAExecutionProvider', 'CPUExecutionProvider'] if cuda else ['CPUExecutionProvider']
+        session = ort.InferenceSession(weight_path, providers=providers)
 
         # Get the model inputs
         model_inputs = session.get_inputs()
@@ -191,37 +204,22 @@ class Yolov8:
         self.input_width = input_shape[2]
         self.input_height = input_shape[3]
 
-        # Preprocess the image data
-        img_data = self.preprocess()
+        for path in self.image_paths:
+            # Preprocess the image data
+            image_name = path.split(get_splitter())[-1]
+            print()
+            logger.info(f"Preprocessing {image_name}")
+            img_data = self.preprocess(image_path=path)
 
-        # Run inference using the preprocessed image data
-        outputs = session.run(None, {model_inputs[0].name: img_data})
+            # Run inference using the preprocessed image data
+            logger.info(f"Predicting ...")
+            start_time = time.time()
+            outputs = session.run(None, {model_inputs[0].name: img_data})
+            total_time = round(time.time() - start_time, 3)
+            logger.info(f"Predictiont time: {total_time}s")
+            self.prediction_time += total_time
 
-        # Perform post-processing on the outputs to obtain output image.
-        return self.postprocess(self.img, outputs)  # output image
+            # Perform post-processing on the outputs to obtain output image.
+            predicted_image = self.postprocess(self.img, outputs)  # output image
 
-
-if __name__ == '__main__':
-    # Create an argument parser to handle command-line arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='yolov8n.onnx', help='Input your ONNX model.')
-    parser.add_argument('--img', type=str, default=str(ASSETS / 'bus.jpg'), help='Path to input image.')
-    parser.add_argument('--conf-thres', type=float, default=0.5, help='Confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='NMS IoU threshold')
-    args = parser.parse_args()
-
-    # Check the requirements and select the appropriate backend (CPU or GPU)
-    check_requirements('onnxruntime-gpu' if torch.cuda.is_available() else 'onnxruntime')
-
-    # Create an instance of the Yolov8 class with the specified arguments
-    detection = Yolov8(args.model, args.img, args.conf_thres, args.iou_thres)
-
-    # Perform object detection and obtain the output image
-    output_image = detection.main()
-
-    # Display the output image in a window
-    cv2.namedWindow('Output', cv2.WINDOW_NORMAL)
-    cv2.imshow('Output', output_image)
-
-    # Wait for a key press to exit
-    cv2.waitKey(0)
+            self.predicted_images.append(predicted_image)

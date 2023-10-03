@@ -28,21 +28,6 @@ def check_hardware():
     logger.info(f"GPU Available: {cuda_avail}, Device: {device}")
     return cuda_avail
 
-'''
-def check_hardware():
-    # Check whether hardware has gpu, if there is not gpu, model will predict using cpu
-
-    try:
-        subprocess.check_output('nvidia-smi')
-        cuda_avail = True
-        logger.info("Nvidia GPU: True")
-    except Exception: # this command not being found can raise quite a few different errors depending on the configuration
-        cuda_avail = False
-        logger.info("Nvidia GPU: False")
-
-    return cuda_avail
-'''
-
 def seed_everything(seed=43):
     '''
       Make PyTorch deterministic.
@@ -54,6 +39,7 @@ def seed_everything(seed=43):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
 
+'''
 def display_output(no_detection_images, sign_stamp_count):
     print()
     print('########## Report ###########')
@@ -69,6 +55,8 @@ def display_output(no_detection_images, sign_stamp_count):
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = set(['pdf', 'PDF'])
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS    
+
+'''
 
 # Paths    
 def get_preprocess_image_paths():
@@ -101,21 +89,15 @@ def get_pred_img_paths():
     return new_paths      
 
 def get_pred_folder_path():
-    return r"/app/static/uploads"
-
-def get_preprocess_folder_path():
-    return r"/app/preprocessed-imgs"
+    return r"/app/static/uploads/results"
 
 def get_weight_path():
-    return r"/app/weights/yolov7.onnx"
+    return r"/app/weights/trial6-best.onnx"
 
 def get_user_uploads_paths():
     path = r'/app/user-uploads'    
     os.makedirs(path, exist_ok=True)
     return path
-
-def get_aws_cred_csv_path():
-    return r"/app/static/new_user_credentials.csv"    
 
 def clean_up():
     '''
@@ -131,4 +113,3 @@ def clean_up():
     shutil.rmtree(user_upload_dir)
     shutil.rmtree(preprocess_imgs_dir)
     #shutil.rmtree(pred_imgs_dir)
-    

@@ -31,7 +31,6 @@ RUN pip install jupyter -U && pip install jupyterlab
 # Change working dir to app
 WORKDIR /app
 
-#CMD ["python3", "main.py"]
+CMD ["python3", "main.py"]
 
-ENTRYPOINT ["jupyter", "lab","--ip=0.0.0.0","--allow-root"]
-#CMD ["python3", "main.py"]
+#ENTRYPOINT ["jupyter", "lab","--ip=0.0.0.0","--allow-root"]
