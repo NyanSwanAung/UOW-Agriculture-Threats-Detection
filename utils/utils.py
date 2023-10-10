@@ -39,7 +39,6 @@ def seed_everything(seed=43):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
 
-'''
 def display_output(no_detection_images, sign_stamp_count):
     print()
     print('########## Report ###########')
@@ -53,12 +52,12 @@ def display_output(no_detection_images, sign_stamp_count):
         print(f"{count+1}: {key}: {value}")
 
 def allowed_file(filename):
-    ALLOWED_EXTENSIONS = set(['pdf', 'PDF'])
+    ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'mp4'])
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS    
 
-'''
-
 # Paths    
+#Assets is where media is uploaded
+#
 def get_preprocess_image_paths():
     paths = []
     
@@ -67,6 +66,9 @@ def get_preprocess_image_paths():
             paths.append(os.path.join(dirname, filename))
             
     return paths
+
+def get_preprocess_folder_path():
+    return r'static\uploads\user-uploads'
 
 def get_user_upload_pdf_paths():
     paths = []
@@ -89,13 +91,13 @@ def get_pred_img_paths():
     return new_paths      
 
 def get_pred_folder_path():
-    return r"/app/static/uploads/results"
+    return r"static\uploads\results"
 
 def get_weight_path():
-    return r"/app/weights/trial6-best.onnx"
+    return r"weights\trial6-best.onnx"
 
 def get_user_uploads_paths():
-    path = r'/app/user-uploads'    
+    path = r'user-uploads'    
     os.makedirs(path, exist_ok=True)
     return path
 

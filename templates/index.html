@@ -8,11 +8,30 @@
     <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">
 </head>
 <body>
-   <div>
-        <p>Hello World</p>
+   <div class="container">
+        <h2>Crop Vision: Weed Detection</h2>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Upload Image/Video:</label>
+                <input type="file" name="file[]" accept="image/*,video/*" class="form-control" id="file" multiple>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload and Detect</button>
+        </form>
+
+        <!-- Loading Animation -->
+        <div class="animiation-box">
+            <div class="ball blue"></div>
+            <div class="ball red"></div>
+            <div class="ball yellow"></div>
+            <div class="ball green"></div>
+        </div>
    </div>
-
+   <script>
+    $(document).ready(function() {
+        $("form").submit(function() {
+            $(".animiation-box").addClass("display");
+        });
+    });
+    </script>
 </body>
-
 </html>
-
