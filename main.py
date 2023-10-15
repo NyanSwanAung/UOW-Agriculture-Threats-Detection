@@ -24,7 +24,7 @@ upload_img_folder = './static/uploads/user-uploads/'
 
 
 pred_img_paths_jpeg = glob('./static/uploads/user-uploads/*.jpeg')
-pred_img_paths_jpg = glob('./static/uploads/tuser-uploads/*.jpg')
+pred_img_paths_jpg = glob('./static/uploads/user-uploads/*.jpg')
 pred_img_paths = pred_img_paths_jpeg + pred_img_paths_jpg
 
 demo_model = Yolov8(pred_test_img_paths, demo_results_path)
@@ -92,10 +92,10 @@ def predict_demo_images():
 @app.route('/predict_images', methods=['GET', 'POST'])
 def predict_images():
     
+    model.predict()
+    model.save_output()
     if request.method == 'POST':
         if 'file[]' not in request.files:
-            model.predict()
-            model.save_output()
             flash('No file part')
             return redirect(request.url)
 
