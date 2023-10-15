@@ -39,6 +39,36 @@
    <br>
      <!-- Button to trigger predictions -->
    <button onclick="location.href='/predict_demo_images'">Click me for a demo!</button>
-   
+   <br>
+   <br>
+   <!-- Table to display images -->
+   <table class="table">
+       <thead>
+           <tr>
+               <th>Original Image</th>
+               <th>Processed Image</th>
+               <th>Time to Detect</th>
+               <th>Detection count</th>
+           </tr>
+       </thead>
+       <tbody>
+           {% for original, processed, time, count in images_data %}
+           <tr>
+               <td>
+                <a href="{{ url_for('display_demo_upload_image', filename=original.split('/')[-1], _external=True) }}" target="_blank">
+                    <img src="{{ original }}" alt="Original Image" width="200">
+                </a>
+                </td>
+               <td> 
+                <a href="{{ url_for('display_demo_pred_image', filename=processed.split('/')[-1], _external=True) }}" target="_blank">
+                    <img src="{{ processed }}" alt="Processed Image" width="200">
+                </a>
+                </td>
+               <td>{{ time }}s</td>
+               <td>{{ count }}</td>
+           </tr>
+           {% endfor %}
+       </tbody>
+   </table>
 </body>
 </html>

@@ -11,7 +11,7 @@ import time
 
 class Yolov8:
 
-    def __init__(self, image_paths, confidence_thres=0.5, iou_thres=0.5):
+    def __init__(self, image_paths, results_path, confidence_thres=0.5, iou_thres=0.5):
         """
         Initializes an instance of the Yolov8 class.
 
@@ -23,9 +23,13 @@ class Yolov8:
         self.image_paths = image_paths
         self.confidence_thres = confidence_thres
         self.iou_thres = iou_thres
+        self.results_path = results_path
         self.predicted_images = []
-        self.prediction_time = 0;
-
+        self.prediction_times = []
+        self.detection_count = []
+        self.prediction_time = 0
+        print(image_paths)
+        print(results_path)
         # Load the class names from the COCO dataset
         self.classes = {0: 'weed'}
 
@@ -131,6 +135,7 @@ class Yolov8:
         y_factor = self.img_height / self.input_height
 
         # Iterate over each row in the outputs array
+        image_count = 0
         for i in range(rows):
             # Extract the class scores from the current row
             classes_scores = outputs[i][4:]
@@ -142,7 +147,7 @@ class Yolov8:
             if max_score >= self.confidence_thres:
                 # Get the class ID with the highest score
                 class_id = np.argmax(classes_scores)
-
+                
                 # Extract the bounding box coordinates from the current row
                 x, y, w, h = outputs[i][0], outputs[i][1], outputs[i][2], outputs[i][3]
 
@@ -156,7 +161,7 @@ class Yolov8:
                 class_ids.append(class_id)
                 scores.append(max_score)
                 boxes.append([left, top, width, height])
-
+        
         # Apply non-maximum suppression to filter out overlapping bounding boxes
         indices = cv2.dnn.NMSBoxes(boxes, scores, self.confidence_thres, self.iou_thres)
 
@@ -169,22 +174,45 @@ class Yolov8:
 
             # Draw the detection on the input image
             self.draw_detections(input_image, box, score, class_id)
-
+        self.detection_count.append(len(indices))
         # Return the modified input image
         return input_image
 
     def save_output(self):
-        pred_folder_path = get_pred_folder_path()
+        pred_folder_path = self.results_path
         os.makedirs(pred_folder_path, exist_ok=True)
 
         for path, pred_arr in zip(self.image_paths, self.predicted_images):
             img_name = pred_folder_path + get_splitter() + path.split(get_splitter())[-1]
             cv2.imwrite(img_name, pred_arr)
+            logger.info(f"Saved image at: {img_name}")
 
         print()
         logger.info(f"All predicted images have been saved!")
         logger.info(f"Total prediction time: {self.prediction_time}s")
         
+    def get_image_data(self):
+        # Assuming that the processed images are saved with the same filename but in a different directory
+        pred_folder_path = self.results_path
+        image_data = []
+        i = 0
+        for original_path in self.image_paths:
+            filename = original_path.split(get_splitter())[-1]
+            processed_path = pred_folder_path + filename
+
+            # For now, let's assume a constant confidence score of 0.95 for all images
+            # You should replace this with the actual confidence score from your model
+            prediction_times = self.prediction_times[i]
+            detection_count = self.detection_count[i]
+
+            image_data.append((original_path, processed_path, prediction_times, detection_count))
+            i += 1
+        
+        for data in image_data:
+            print(data)
+
+        return image_data
+    
     def predict(self):
         """
         Performs inference using an ONNX model and returns the output image with drawn detections.
@@ -218,6 +246,7 @@ class Yolov8:
             total_time = round(time.time() - start_time, 3)
             logger.info(f"Predictiont time: {total_time}s")
             self.prediction_time += total_time
+            self.prediction_times.append(total_time)
 
             # Perform post-processing on the outputs to obtain output image.
             predicted_image = self.postprocess(self.img, outputs)  # output image

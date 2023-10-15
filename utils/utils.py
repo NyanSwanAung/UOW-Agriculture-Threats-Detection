@@ -55,8 +55,8 @@ def allowed_file(filename):
     ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'mp4'])
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS    
 
-# Paths    
-#Assets is where media is uploaded
+#Paths    
+#user-uploads seems to be where uploads go
 #
 def get_preprocess_image_paths():
     paths = []
@@ -68,7 +68,7 @@ def get_preprocess_image_paths():
     return paths
 
 def get_preprocess_folder_path():
-    return r'static\uploads\user-uploads'
+    return r'static/uploads/test-set/images/'
 
 def get_user_upload_pdf_paths():
     paths = []
@@ -91,13 +91,13 @@ def get_pred_img_paths():
     return new_paths      
 
 def get_pred_folder_path():
-    return r"static\uploads\results"
+    return r"static/uploads/results/"
 
 def get_weight_path():
-    return r"weights\trial6-best.onnx"
+    return r"weights/trial6-best.onnx"
 
 def get_user_uploads_paths():
-    path = r'user-uploads'    
+    path = r'user-uploads/'    
     os.makedirs(path, exist_ok=True)
     return path
 
@@ -114,4 +114,4 @@ def clean_up():
 
     shutil.rmtree(user_upload_dir)
     shutil.rmtree(preprocess_imgs_dir)
-    #shutil.rmtree(pred_imgs_dir)
+    shutil.rmtree(pred_imgs_dir)
