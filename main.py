@@ -23,8 +23,8 @@ upload_img_folder = './static/uploads/user-uploads/'
 
 
 
-pred_img_paths_jpeg = glob('./static/uploads/user-uploads/*.jpeg')
-pred_img_paths_jpg = glob('./static/uploads/user-uploads/*.jpg')
+pred_img_paths_jpeg = glob('./static/uploads/user-uploads/**.jpeg')
+pred_img_paths_jpg = glob('./static/uploads/user-uploads/**.jpg')
 pred_img_paths = pred_img_paths_jpeg + pred_img_paths_jpg
 
 demo_model = Yolov8(pred_test_img_paths, demo_results_path)
@@ -92,8 +92,7 @@ def predict_demo_images():
 @app.route('/predict_images', methods=['GET', 'POST'])
 def predict_images():
     
-    model.predict()
-    model.save_output()
+    
     if request.method == 'POST':
         if 'file[]' not in request.files:
             flash('No file part')
@@ -105,9 +104,10 @@ def predict_images():
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(upload_img_folder, filename))
+        
+        model.predict()
+        model.save_output()
 
-    model.predict()
-    model.save_output()
     images_data = model.get_image_data()
     flash('File(s) successfully uploaded')
         
@@ -140,7 +140,7 @@ def clear_data():
     # Clear the user uploads and results folders
     clear_folder(upload_img_folder)
     clear_folder(results_path)
-
+    model.clear()
     # Reset the model's data
 
     flash('Data cleared successfully!')

@@ -36,6 +36,12 @@ class Yolov8:
         # Generate a color palette for the classes
         self.color_palette = np.random.uniform(0, 255, size=(len(self.classes), 3))
 
+    def clear(self):
+        self.predicted_images = []
+        self.prediction_times = []
+        self.detection_count = []
+        self.prediction_time = 0
+
     def draw_detections(self, img, box, score, class_id):
         """
         Draws bounding boxes and labels on the input image based on the detected objects.
